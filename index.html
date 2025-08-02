@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Live Weather Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #ffffff);
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #004d40;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .sensor {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .sensor:hover {
+            transform: scale(1.02);
+        }
+
+        .sensor h2 {
+            margin-bottom: 10px;
+            color: #00695c;
+        }
+
+        .sensor p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #00796b;
+        }
+
+        canvas {
+            max-width: 200px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>🌤️ Live Weather Dashboard</h1>
+
+        <div class="grid">
+            <div class="sensor">
+                <h2>🌡️ Temperature (°C)</h2>
+                <canvas id="tempGauge"></canvas>
+                <p>{{ data.Temperature if data.Temperature is not none else 'N/A' }}</p>
+            </div>
+
+            <div class="sensor">
+                <h2>💧 Humidity (%)</h2>
+                <canvas id="humGauge"></canvas>
+                <p>{{ data.Humidity if data.Humidity is not none else 'N/A' }}</p>
+            </div>
+
+            <div class="sensor">
+                <h2>🌬️ Pressure (hPa)</h2>
+                <canvas id="pressGauge"></canvas>
+                <p>{{ data.Pressure if data.Pressure is not none else 'N/A' }}</p>
+            </div>
+
+            <div class="sensor">
+                <h2>☀️ UV Index</h2>
+                <canvas id="uvGauge"></canvas>
+                <p>{{ data.UV_index if data.UV_index is not none else 'N/A' }}</p>
+            </div>
+
+            <div class="sensor">
+                <h2>⛰️ Altitude (m)</h2>
+                <canvas id="altGauge"></canvas>
+                <p>{{ data.Altitude if data.Altitude is not none else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gaugeOptions = (min, max) => ({
+            type: 'doughnut',
+            data: {
+                labels: ['Value', 'Remaining'],
+                datasets: [{
+                    data: [0, 100],
+                    backgroundColor: ['#26a69a', '#e0f2f1'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                rotation: -90,
+                circumference: 180,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        function updateGauge(canvasId, value, maxValue) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const chart = new Chart(ctx, gaugeOptions(0, maxValue));
+            chart.data.datasets[0].data = [value, Math.max(0, maxValue - value)];
+            chart.update();
+        }
+
+        updateGauge("tempGauge", {{ data.Temperature or 0 }}, 100);
+        updateGauge("humGauge", {{ data.Humidity or 0 }}, 100);
+        updateGauge("pressGauge", {{ data.Pressure or 0 }}, 1100);
+        updateGauge("uvGauge", {{ data.UV_index or 0 }}, 15);
+        updateGauge("altGauge", {{ data.Altitude or 0 }}, 5000);
+    </script>
+</body>
+</html>
